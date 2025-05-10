@@ -21,8 +21,7 @@ public class Doctor {
     @Column(nullable=false)
     private String especialidad;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(referencedColumnName = "id")
+    @OneToMany(mappedBy = "doctor")
     private List<Cita> citas;
 
     public List<Cita> getCitas() {

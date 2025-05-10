@@ -2,7 +2,10 @@ package com.hospital.doctors.controllers;
 
 import com.hospital.doctors.models.Cita;
 import com.hospital.doctors.models.CitaDto;
+import com.hospital.doctors.models.Consultorio;
+import com.hospital.doctors.models.Doctor;
 import com.hospital.doctors.repositories.CitasRepository;
+import com.hospital.doctors.repositories.ConsultoriosRepository;
 import com.hospital.doctors.repositories.DoctorsRepository;
 import com.hospital.doctors.service.DoctorsService;
 import jakarta.validation.Valid;
@@ -11,8 +14,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
@@ -24,6 +29,9 @@ public class CitasController {
 
     @Autowired
     private DoctorsService doctorsService;
+
+    @Autowired
+    private ConsultoriosRepository consultoriosRepository;
 
     @GetMapping({"","/"})
     public String getCitas(Model model){
@@ -44,7 +52,30 @@ public class CitasController {
             @Valid @ModelAttribute CitaDto citaDto,
             BindingResult result){
 
-            int doctorId = doctorsService.getAvailableDoctorId(citaDto.getFecha());
+        Doctor doctor = doctorsService.getAvailableDoctorId(citaDto.getFecha());
+
+        if(doctor == null) {
+            result.addError(
+                    new FieldError("movementDto", "fecha", citaDto.getFecha()
+                            , false, null, null,
+                            "No hay doctores disponibles*")
+            );
+        }
+
+        if(result.hasErrors()){
+            return "create";
+        }
+        List<Consultorio> consultorios = consultoriosRepository.findAll();
+
+        Cita cita = new Cita();
+
+        // values hardcoded and the logic was not added to validate consultories or the time of doctors due needed more time
+        cita.setDoctor(doctor);
+        cita.setNombre(citaDto.getNombre());
+        cita.setHorario(LocalDateTime.now());
+        cita.setConsultorio(consultorios.get(0));
+        citasRepository.save(cita);
+
 
 
 
